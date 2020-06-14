@@ -21,6 +21,4 @@ public interface HTTPUtil {
     void addKnownHost(String host);
 
     void setHeader(String header, String value);
-
-
 }
