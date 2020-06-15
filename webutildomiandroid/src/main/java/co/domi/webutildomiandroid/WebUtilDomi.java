@@ -18,87 +18,110 @@ public class WebUtilDomi {
     private IAction workerAction;
 
 
-    private WebUtilDomi(){
+    private WebUtilDomi() {
         hosts = new ArrayList<>();
         headers = new HashMap<>();
     }
 
-    public static WebUtilDomi create(){
+    public static WebUtilDomi create() {
         return new WebUtilDomi();
     }
 
-    public WebUtilDomi withMethod(String method){
+    //1
+    public WebUtilDomi withMethod(String method) {
         this.method = method;
         return this;
     }
 
-    public WebUtilDomi toURL(String url){
+    //2
+    public WebUtilDomi toURL(String url) {
         this.url = url;
         return this;
     }
 
+    //3*
     public WebUtilDomi withBody(String json) {
         this.body = json;
         return this;
     }
 
+    //4*
     public WebUtilDomi setHeader(String clave, String valor) {
         this.headers.put(clave, valor);
         return this;
     }
 
-    public void execute() {
-        if(url.startsWith("https")){
-            util = new HTTPSWebUtilDomi();
-        }else if(url.startsWith("http")){
-            util = new HTTPWebUtilDomi();
-        }else{
-            System.out.println("WebUtilDomi>>> Malformed URL");
-        }
-
-        for(String header : headers.keySet()){
-            String value = headers.get(header);
-            util.setHeader(header, value);
-        }
-
-        for(String host : hosts){
-            util.addKnownHost(host);
-        }
-
-        new Thread(
-                ()->{
-                    if(method.equals("GET")){
-                        util.syncGETrequest(url);
-                    }else if(method.equals("POST")){
-                        if(body == null) System.out.println(">>>UtilDomi: Body is missing");
-                        else util.syncPOSTRequest(url, body);
-                    }else if(method.equals("PUT")){
-                        if(body == null) System.out.println(">>>UtilDomi: Body is missing");
-                        else util.syncPUTRequest(url, body);
-                    }else if(method.equals("DELETE")){
-                        util.syncDELETErequest(url);
-                    }
-
-                    workerAction.run();
-
-                    activity.runOnUiThread(
-                            this.uiAction
-                    );
-                }
-        ).start();
-    }
-
-    public void forActivity(Activity activity){
+    //5
+    public void forActivity(Activity activity) {
         this.activity = activity;
     }
 
+    //6*
     public WebUtilDomi withWorkerEndAction(IAction workerAction) {
         this.workerAction = workerAction;
         return this;
     }
 
+    //7*
     public WebUtilDomi withUIEndAction(Runnable uiAction) {
         this.uiAction = uiAction;
         return this;
+    }
+
+    public void execute() {
+        //2
+        if (url.startsWith("https")) {
+            util = new HTTPSWebUtilDomi();
+        } else if (url.startsWith("http")) {
+            util = new HTTPWebUtilDomi();
+        } else {
+            System.out.println("WebUtilDomi>>> Malformed URL. Use a protocol http or https");
+        }
+
+        //4*
+        for (String header : headers.keySet()) {
+            String value = headers.get(header);
+            util.setHeader(header, value);
+        }
+
+        //2
+        util.addKnownHost(url);
+
+        new Thread(
+                () -> {
+                    //1
+                    if (method.equals("GET")) {
+                        util.syncGETrequest(url);
+                    } else if (method.equals("POST")) {
+                        //3
+                        if (body == null) {
+                            System.out.println(">>>UtilDomi: Body is missing, if you want a message with no body, use setBody(\"\"). Operation cancelled");
+                            return;
+                        } else util.syncPOSTRequest(url, body);
+                    } else if (method.equals("PUT")) {
+                        //3
+                        if (body == null) {
+                            System.out.println(">>>UtilDomi: Body is missing, if you want a message with no body, use setBody(\"\"). Operation cancelled");
+                            return;
+                        } else util.syncPUTRequest(url, body);
+                    } else if (method.equals("DELETE")) {
+                        util.syncDELETErequest(url);
+                    }
+
+                    //6*
+                    if (workerAction != null) workerAction.run();
+
+                    //5, 7*
+                    if (activity != null && uiAction != null) {
+                        activity.runOnUiThread(
+                                this.uiAction
+                        );
+                    } else if (activity == null && uiAction != null) {
+                        System.out.println(">>>UtilDomi: Context is missing. It is needed to complete UI Action");
+                    } else if (activity != null && uiAction == null) {
+                        System.out.println(">>>UtilDomi: UIAction is missing");
+                    }
+                }
+        ).start();
     }
 }

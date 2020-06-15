@@ -1,6 +1,6 @@
 package co.domi.webutildomiandroid;
 
-public interface HTTPUtil {
+interface HTTPUtil {
 
     void GETrequest(int callbackID, String url);
 

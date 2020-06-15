@@ -20,7 +20,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-public class HTTPSWebUtilDomi implements HTTPUtil {
+class HTTPSWebUtilDomi implements HTTPUtil {
 
     private HashMap<String, String> headers;
     private ArrayList<String> hosts;
@@ -51,7 +51,7 @@ public class HTTPSWebUtilDomi implements HTTPUtil {
             HttpsURLConnection.setDefaultHostnameVerifier((hostname, sslSession) -> {
                 boolean accept = false;
                 for (String host : hosts) {
-                    if (hostname.contains(host)) {
+                    if (host.contains(hostname)) {
                         accept = true;
                     }
                 }

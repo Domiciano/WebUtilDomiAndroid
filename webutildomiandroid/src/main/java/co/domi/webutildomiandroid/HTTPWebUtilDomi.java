@@ -10,7 +10,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
 
-public class HTTPWebUtilDomi implements HTTPUtil {
+class HTTPWebUtilDomi implements HTTPUtil {
 
     private OnResponseListener listener;
     private HashMap<String, String> headers;
