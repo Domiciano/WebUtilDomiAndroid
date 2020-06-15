@@ -1,5 +1,5 @@
 package co.domi.webutildomiandroid;
 
 interface IAction {
-    void run();
+    void run(String response);
 }

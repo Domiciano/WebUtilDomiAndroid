@@ -10,11 +10,12 @@ public class WebUtilDomi {
     private String method;
     private String url;
     private String body;
+    private String response;
     private HashMap<String, String> headers;
     private ArrayList<String> hosts;
     private HTTPUtil util;
     private Activity activity;
-    private Runnable uiAction;
+    private IAction uiAction;
     private IAction workerAction;
 
 
@@ -52,8 +53,9 @@ public class WebUtilDomi {
     }
 
     //5
-    public void forActivity(Activity activity) {
+    public WebUtilDomi forActivity(Activity activity) {
         this.activity = activity;
+        return this;
     }
 
     //6*
@@ -63,7 +65,7 @@ public class WebUtilDomi {
     }
 
     //7*
-    public WebUtilDomi withUIEndAction(Runnable uiAction) {
+    public WebUtilDomi withUIEndAction(IAction uiAction) {
         this.uiAction = uiAction;
         return this;
     }
@@ -90,31 +92,34 @@ public class WebUtilDomi {
         new Thread(
                 () -> {
                     //1
+                    response = "";
                     if (method.equals("GET")) {
-                        util.syncGETrequest(url);
+                        response = util.syncGETrequest(url);
                     } else if (method.equals("POST")) {
                         //3
                         if (body == null) {
                             System.out.println(">>>UtilDomi: Body is missing, if you want a message with no body, use setBody(\"\"). Operation cancelled");
                             return;
-                        } else util.syncPOSTRequest(url, body);
+                        } else response = util.syncPOSTRequest(url, body);
                     } else if (method.equals("PUT")) {
                         //3
                         if (body == null) {
                             System.out.println(">>>UtilDomi: Body is missing, if you want a message with no body, use setBody(\"\"). Operation cancelled");
                             return;
-                        } else util.syncPUTRequest(url, body);
+                        } else response = util.syncPUTRequest(url, body);
                     } else if (method.equals("DELETE")) {
-                        util.syncDELETErequest(url);
+                        response = util.syncDELETErequest(url);
                     }
 
                     //6*
-                    if (workerAction != null) workerAction.run();
+                    if (workerAction != null) workerAction.run(response);
 
                     //5, 7*
                     if (activity != null && uiAction != null) {
                         activity.runOnUiThread(
-                                this.uiAction
+                                () -> {
+                                    uiAction.run(response);
+                                }
                         );
                     } else if (activity == null && uiAction != null) {
                         System.out.println(">>>UtilDomi: Context is missing. It is needed to complete UI Action");
